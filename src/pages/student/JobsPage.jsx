@@ -1,6 +1,6 @@
 
-const JobsPage = () => {
+const JobsPages = () => {
   return <div>Jobs Page</div>;
 };
 
-export default JobsPage;
+export default JobsPages;
