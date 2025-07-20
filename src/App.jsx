@@ -15,7 +15,7 @@ import StudentViewCourseDetailsPage from "./pages/student/course-details";
 import PaypalPaymentReturnPage from "./pages/student/payment-return";
 import StudentCoursesPage from "./pages/student/student-courses";
 import StudentViewCourseProgressPage from "./pages/student/course-progress";
-import JobsPage from "./pages/student/JobsPage"; // ✅ Import JobsPage
+import JobsPage from './pages/student/JobsPage';
 
 import NotFoundPage from "./pages/not-found";
 
