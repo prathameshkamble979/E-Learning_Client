@@ -1,9 +1,12 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || "https://e-learning-server-ss29.onrender.com",
+  baseURL: "https://e-learning-server-ss29.onrender.com", // Hardcode to avoid env issues
   withCredentials: true,
-  timeout: 15000, // Increased timeout for Render.com
+  headers: {
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest" // Required for CORS
+  }
 });
 
 // ➡️ Request interceptor
