@@ -5,7 +5,7 @@ const axiosInstance = axios.create({
   baseURL:
     import.meta.env.MODE === "development"
       ? "http://localhost:5000"
-      : "https://e-learning-backend-9llt.onrender.com", 
+      : "https://e-learning-server-yvsm.onrender.com", 
   withCredentials: true, // ✅ Allow sending cookies (important for authentication)
 });
 
