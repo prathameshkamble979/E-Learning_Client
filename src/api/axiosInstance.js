@@ -1,26 +1,32 @@
 import axios from "axios";
 
-// ✅ Dynamically switch baseURL based on environment
 const axiosInstance = axios.create({
-  baseURL:
-    import.meta.env.MODE === "development"
-      ? "http://localhost:5000"
-      : "https://e-learning-server-yvsm.onrender.com", 
-  withCredentials: true, // ✅ Allow sending cookies (important for authentication)
+  baseURL: import.meta.env.VITE_API_BASE || "https://e-learning-server-yvsm.onrender.com",
+  withCredentials: true, // Required for cookies
+  timeout: 10000, // 10s timeout
 });
 
-// ✅ Optional: Attach token if you're using Authorization headers
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const accessToken = sessionStorage.getItem("accessToken");
+// ✅ Auto-add Content-Type if missing
+axiosInstance.interceptors.request.use((config) => {
+  const accessToken = sessionStorage.getItem("accessToken");
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  if (!config.headers["Content-Type"]) {
+    config.headers["Content-Type"] = "application/json";
+  }
+  return config;
+}, (err) => Promise.reject(err));
 
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+// ✅ Better error handling
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === "ECONNABORTED") {
+      error.message = "Request timeout - please try again";
     }
-
-    return config;
-  },
-  (err) => Promise.reject(err)
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;
