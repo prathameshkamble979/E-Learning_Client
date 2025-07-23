@@ -1,10 +1,15 @@
 import axios from "axios";
 
+// ✅ Dynamically switch baseURL based on environment
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000",
-  withCredentials: true,
+  baseURL:
+    import.meta.env.MODE === "development"
+      ? "http://localhost:5000"
+      : "https://e-learning-backend-9llt.onrender.com", 
+  withCredentials: true, // ✅ Allow sending cookies (important for authentication)
 });
 
+// ✅ Optional: Attach token if you're using Authorization headers
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = sessionStorage.getItem("accessToken");
@@ -17,4 +22,5 @@ axiosInstance.interceptors.request.use(
   },
   (err) => Promise.reject(err)
 );
+
 export default axiosInstance;
