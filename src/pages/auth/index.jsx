@@ -10,11 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signInFormControls, signUpFormControls } from "@/config";
 import { AuthContext } from "@/context/auth-context";
 import { GraduationCap } from "lucide-react";
-import { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function AuthPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("signin");
+  const [localError, setLocalError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const {
     signInFormData,
     setSignInFormData,
@@ -22,31 +27,83 @@ function AuthPage() {
     setSignUpFormData,
     handleRegisterUser,
     handleLoginUser,
-    loading, // Assuming loading state is available in context
-    error, // Assuming error state is available in context
+    error,
+    isAuthenticated
   } = useContext(AuthContext);
+
+  // Clear messages when switching tabs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+      setLocalError(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [successMessage, localError]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   function handleTabChange(value) {
     setActiveTab(value);
+    setLocalError(null);
+    setSuccessMessage(null);
   }
 
-  // Check if the SignIn form is valid
-  function checkIfSignInFormIsValid() {
-    const { userEmail, password } = signInFormData;
-    return userEmail !== "" && password !== "";
-  }
+  // Reset form data
+  const resetFormData = (isSignIn = true) => {
+    if (isSignIn) {
+      setSignInFormData({
+        userEmail: "",
+        password: ""
+      });
+    } else {
+      setSignUpFormData({
+        userName: "",
+        userEmail: "",
+        password: ""
+      });
+    }
+  };
 
-  // Check if the SignUp form is valid
-  function checkIfSignUpFormIsValid() {
-    const { userName, userEmail, password } = signUpFormData;
-    return userName !== "" && userEmail !== "" && password !== "";
-  }
+  // Enhanced submit handlers
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setLocalError(null);
+    setSuccessMessage(null);
+    
+    try {
+      await handleLoginUser(signInFormData);
+      setSuccessMessage("Login successful! Redirecting...");
+      resetFormData(true);
+    } catch (err) {
+      setLocalError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-  // Validate email (basic validation)
-  function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setLocalError(null);
+    setSuccessMessage(null);
+    
+    try {
+      await handleRegisterUser(signUpFormData);
+      setSuccessMessage("Registration successful! Please sign in.");
+      resetFormData(false);
+      setActiveTab("signin");
+    } catch (err) {
+      setLocalError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -62,12 +119,13 @@ function AuthPage() {
           defaultValue="signin"
           onValueChange={handleTabChange}
           className="w-full max-w-md"
-          disabled={loading} // Disable tabs while loading
+          disabled={isSubmitting}
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
+          
           <TabsContent value="signin">
             <Card className="p-6 space-y-4">
               <CardHeader>
@@ -79,22 +137,22 @@ function AuthPage() {
               <CardContent className="space-y-2">
                 <CommonForm
                   formControls={signInFormControls}
-                  buttonText={loading ? "Signing In..." : "Sign In"}
+                  buttonText={isSubmitting ? "Signing In..." : "Sign In"}
                   formData={signInFormData}
                   setFormData={setSignInFormData}
-                  isButtonDisabled={!checkIfSignInFormIsValid() || loading}
-                  handleSubmit={handleLoginUser}
+                  isButtonDisabled={isSubmitting}
+                  handleSubmit={handleSignIn}
                 />
-                {signInFormData.userEmail && !validateEmail(signInFormData.userEmail) && (
-                  <p className="text-red-500 text-sm">Please enter a valid email.</p>
+                {successMessage && (
+                  <p className="text-green-500 text-sm">{successMessage}</p>
                 )}
-                {signInFormData.password === "" && (
-                  <p className="text-red-500 text-sm">Password cannot be empty.</p>
+                {(localError || error) && (
+                  <p className="text-red-500 text-sm">{localError || error}</p>
                 )}
-                {error && <p className="text-red-500 text-sm">{error}</p>} {/* Show error message if any */}
               </CardContent>
             </Card>
           </TabsContent>
+          
           <TabsContent value="signup">
             <Card className="p-6 space-y-4">
               <CardHeader>
@@ -106,25 +164,18 @@ function AuthPage() {
               <CardContent className="space-y-2">
                 <CommonForm
                   formControls={signUpFormControls}
-                  buttonText={loading ? "Signing Up..." : "Sign Up"}
+                  buttonText={isSubmitting ? "Signing Up..." : "Sign Up"}
                   formData={signUpFormData}
                   setFormData={setSignUpFormData}
-                  isButtonDisabled={!checkIfSignUpFormIsValid() || loading}
-                  handleSubmit={handleRegisterUser}
+                  isButtonDisabled={isSubmitting}
+                  handleSubmit={handleSignUp}
                 />
-                {signUpFormData.userName === "" && (
-                  <p className="text-red-500 text-sm">Username cannot be empty.</p>
+                {successMessage && (
+                  <p className="text-green-500 text-sm">{successMessage}</p>
                 )}
-                {signUpFormData.userEmail === "" && (
-                  <p className="text-red-500 text-sm">Email cannot be empty.</p>
+                {(localError || error) && (
+                  <p className="text-red-500 text-sm">{localError || error}</p>
                 )}
-                {signUpFormData.password === "" && (
-                  <p className="text-red-500 text-sm">Password cannot be empty.</p>
-                )}
-                {signUpFormData.userEmail && !validateEmail(signUpFormData.userEmail) && (
-                  <p className="text-red-500 text-sm">Please enter a valid email.</p>
-                )}
-                {error && <p className="text-red-500 text-sm">{error}</p>} {/* Show error message if any */}
               </CardContent>
             </Card>
           </TabsContent>
