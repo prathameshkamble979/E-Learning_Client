@@ -15,7 +15,7 @@ import StudentViewCourseDetailsPage from "./pages/student/course-details";
 import PaypalPaymentReturnPage from "./pages/student/payment-return";
 import StudentCoursesPage from "./pages/student/student-courses";
 import StudentViewCourseProgressPage from "./pages/student/course-progress";
-import JobsPages from "./pages/student/JobPages";
+import JobsPage from "./pages/student/JobPage";
 
 import NotFoundPage from "./pages/not-found";
 
@@ -85,7 +85,7 @@ function App() {
         <Route index element={<Navigate to="home" />} />
         <Route path="home" element={<StudentHomePage />} />
         <Route path="courses" element={<StudentViewCoursesPage />} />
-        <Route path="jobs" element={<JobsPages />} /> {/* ✅ Added Jobs route */}
+        <Route path="jobs" element={<JobsPage />} /> {/* ✅ Added Jobs route */}
         <Route path="course/details/:id" element={<StudentViewCourseDetailsPage />} />
         <Route path="payment-return" element={<PaypalPaymentReturnPage />} />
         <Route path="student-courses" element={<StudentCoursesPage />} />
