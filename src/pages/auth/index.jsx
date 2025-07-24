@@ -19,7 +19,7 @@ function AuthPage() {
   const [localError, setLocalError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const {
     signInFormData,
     setSignInFormData,
@@ -28,54 +28,51 @@ function AuthPage() {
     handleRegisterUser,
     handleLoginUser,
     error,
-    isAuthenticated
+    isAuthenticated,
+    // loading
   } = useContext(AuthContext);
 
-  // Clear messages when switching tabs
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSuccessMessage(null);
-      setLocalError(null);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [successMessage, localError]);
-
-  // Redirect if already authenticated
+  // ✅ Safe useEffect (no conditional call)
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  function handleTabChange(value) {
+  // ✅ Auto-clear success/error messages
+  useEffect(() => {
+    if (successMessage || localError) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+        setLocalError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, localError]);
+
+  // ✅ Skip rendering the form if already authenticated (AFTER hooks)
+  if (isAuthenticated) return null;
+
+  const handleTabChange = (value) => {
     setActiveTab(value);
     setLocalError(null);
     setSuccessMessage(null);
-  }
+    resetFormData(value === "signin");
+  };
 
-  // Reset form data
   const resetFormData = (isSignIn = true) => {
     if (isSignIn) {
-      setSignInFormData({
-        userEmail: "",
-        password: ""
-      });
+      setSignInFormData({ userEmail: "", password: "" });
     } else {
-      setSignUpFormData({
-        userName: "",
-        userEmail: "",
-        password: ""
-      });
+      setSignUpFormData({ userName: "", userEmail: "", password: "" });
     }
   };
 
-  // Enhanced submit handlers
   const handleSignIn = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setLocalError(null);
     setSuccessMessage(null);
-    
     try {
       await handleLoginUser(signInFormData);
       setSuccessMessage("Login successful! Redirecting...");
@@ -92,7 +89,6 @@ function AuthPage() {
     setIsSubmitting(true);
     setLocalError(null);
     setSuccessMessage(null);
-    
     try {
       await handleRegisterUser(signUpFormData);
       setSuccessMessage("Registration successful! Please sign in.");
@@ -108,24 +104,23 @@ function AuthPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center border-b">
-        <Link to={"/"} className="flex items-center justify-center">
+        <Link to="/" className="flex items-center justify-center">
           <GraduationCap className="h-8 w-8 mr-4" />
           <span className="font-extrabold text-xl">Skill Orbit</span>
         </Link>
       </header>
+
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Tabs
           value={activeTab}
-          defaultValue="signin"
           onValueChange={handleTabChange}
           className="w-full max-w-md"
-          disabled={isSubmitting}
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signin" disabled={isSubmitting}>Sign In</TabsTrigger>
+            <TabsTrigger value="signup" disabled={isSubmitting}>Sign Up</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="signin">
             <Card className="p-6 space-y-4">
               <CardHeader>
@@ -152,7 +147,7 @@ function AuthPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="signup">
             <Card className="p-6 space-y-4">
               <CardHeader>
